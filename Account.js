@@ -1,10 +1,11 @@
 class Account{
     static accountId=0
-    static passbook=[]
     constructor(bankId,balance){
         this.accountId=Account.accountId++
         this.bankId=bankId
         this.balance=balance
+        this.passbook=[]
+
     }
     static newAccount(bankId,balance){
         try {
@@ -13,6 +14,9 @@ class Account{
             }
             if (typeof balance!='number'){
                 throw new Error ('Invalid bank balance format')
+            }
+            if (balance<1000){
+                throw new Error ('Balance should be greater than 1000')
             }
             return new Account(bankId,balance)
         } catch (error) {
@@ -37,19 +41,22 @@ class Account{
             if (typeof amount!='number'){
                 throw new Error ('Invalid amount format')
             }
+            if (typeof amount>=this.balance){
+                throw new Error ('Withdrawal amount is more than the balance amount')
+            }
             return this.balance-=amount
         } catch (error) {
            console.log(error.message) 
         }
     }
-    static printPassbook(transactionDetails){
-        try {
-            Account.passbook.push(transactionDetails)
-        } catch (error) {
-            console.log(error.message)
-        }
+    getAccountSummary(){
+        return {
+            accountId:this.accountId,
+            bankId:this.bankId,
+            balance:this.balance,
+        };
     }
-    static getPassbook(){
+    getPassbook(){
         return this.passbook
     }
 }

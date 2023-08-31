@@ -70,7 +70,6 @@ class Customer{
         }
        return this.lastName=value
       }
-      
       updateCustomer(customerId,parameter,value){ //admin can update customer info
         try {
             if (!this.isAdmin){
@@ -152,12 +151,14 @@ class Customer{
         if (!this.isAdmin) {
             throw new Error("Not an admin");
           }
+          if (typeof bankId!='number'){
+            throw new Error('Invalid id format')
+        }
           let [bankToBeRemoved, indexOfBankToBeRemoved] = Bank.findBank(bankId)
           if (bankToBeRemoved == null) {
             throw new Error("No users found");
           }
           bankToBeRemoved.removeBank(indexOfBankToBeRemoved)
-        //   Customer.allBanks.splice(indexOfBankToBeRemoved, 1);
           return `User is deleted at ${bankId}`;
         } catch (error) {
           console.log(error.message);
@@ -182,7 +183,7 @@ class Customer{
               if (this.isAdmin) {
                   throw new Error("Admin cannot accces accounts")
               }
-              return this.allaccounts
+              return this.allaccounts.map(account=>account.getAccountSummary())
           } catch (error) {
               console.log(error.message)
           }
@@ -229,13 +230,14 @@ class Customer{
               }
               let depositAmount=foundAccountId.depositAmount(amount)
               let date = new Date()
-              let senderID=null
-              let receiverID=this.customerId
+              let senderId=null
+              let receiverId=this.customerId
               let type='Credit'
               let transactionAmount = amount
               let currentBalance = foundAccountId.getBalance()
-              let transactionDetails= Transaction.newTransaction(date,senderID,receiverID,type,transactionAmount,currentBalance)
-              Account.printPassbook(transactionDetails)
+              let transactionDetails= Transaction.newTransaction(date,senderId,receiverId,type,transactionAmount,currentBalance)
+              let passbook=foundAccountId.getPassbook()
+              passbook.push(transactionDetails)
               return depositAmount
           } catch (error) {
               console.log(error.message)        
@@ -255,26 +257,31 @@ class Customer{
               }
               let withdrawAmount=foundAccountId.withdrawAmount(amount)
               let date = new Date()
-              let senderID=this.customerId
-              let receiverID=null
+              let senderId=this.customerId
+              let receiverId=null
               let type='Debit'
               let transactionAmount = amount
               let currentBalance = foundAccountId.getBalance()
-              let transactionDetails = Transaction.newTransaction(date,senderID,receiverID,type,transactionAmount,currentBalance)
-              Account.printPassbook(transactionDetails)
+              let transactionDetails = Transaction.newTransaction(date,senderId,receiverId,type,transactionAmount,currentBalance)
+              let passbook=foundAccountId.getPassbook()
+              passbook.push(transactionDetails)
               return withdrawAmount
           } catch (error) {
               console.log(error.message)
           }
       }
-      getPassbook()
+      getPassbook(accountId)
       {
           try {
               if(this.isAdmin)
               {
                   throw new Error("Admin cannot have access to account")
               }
-              return Account.getPassbook()
+              let [foundAccount,indexofFoundAccount]=this.#findAccount(accountId)
+              if (foundAccount==null){
+                throw new Error ('Account not found')
+              }
+              return foundAccount.getPassbook()
           } catch (error) {
               console.log(error.message)
           }
@@ -291,7 +298,7 @@ class Customer{
               console.log(error.message)
           }
       }
-      transfer(senderId,senderAccountId,receiverId,receiverAccountId,amount)
+      transfer(senderAccountId,receiverId,receiverAccountId,amount)
       {
           try {
               if(this.isAdmin)
@@ -303,25 +310,27 @@ class Customer{
               {
                   throw new Error("Account number not found!")
               }
+              let [receiver,receiverid] = Customer.#findCustomer(receiverId)
+              let [foundReceiverAccount,indexOFReceiverAccount] = receiver.#findAccount(receiverAccountId)
+              if(foundReceiverAccount == null)
+              {
+                  throw new Error("Account number not found!")
+              }
+              let senderId=this.customerId
               foundSenderAccount.withdrawAmount(amount)
               let date = new Date()
               let senderType='Debit'
               let transactionAmount = amount
               let senderCurrentBalance = foundSenderAccount.getBalance()
               let senderTransactionDetails = Transaction.newTransaction(date,senderId,null,senderType,transactionAmount,senderCurrentBalance)
-              Account.printPassbook(senderTransactionDetails)
-  
-              let [receiver,receiverid] = Customer.#findCustomer(receiverId)
-              
-              let [foundReceiverAccount,indexOFReceiverAccount] = receiver.#findAccount(receiverAccountId)
-              if(foundReceiverAccount == null)
-              {
-                  throw new Error("Account number not found!")
-              }
-              foundReceiverAccount.depositAmount(amount)
+              let newSenderPassbook=foundSenderAccount.getPassbook()  
+              newSenderPassbook.push(senderTransactionDetails)  
+
               let receiverType='Credit'
               let receiverCurrentBalance=foundReceiverAccount.getBalance()
-              Transaction.newTransaction(date,senderId,receiverId,receiverType,transactionAmount,receiverCurrentBalance)
+              let receiverTransactionDetails=Transaction.newTransaction(date,senderId,receiverId,receiverType,transactionAmount,receiverCurrentBalance)
+              let newReceiverPassbook=foundReceiverAccount.getPassbook()
+              newReceiverPassbook.push(receiverTransactionDetails)
           } catch (error) {
               console.log(error.message)
           }
