@@ -1,11 +1,11 @@
 const Customer=require("./Customer")
 
 let admin=Customer.newAdmin("Admin","1")
-console.log(admin)
+// console.log(admin)
 
 let customer1=admin.newCustomer("Sanika","Shinde",2000)
 let customer2=admin.newCustomer("Deep","Singh",3000)
-console.log(admin.getAllCustomer())
+// console.log(admin.getAllCustomer())
 
 // admin.updateCustomer(1,'first',"Deepanshu")
 // console.log(admin.getAllCustomer())
@@ -15,7 +15,7 @@ console.log(admin.getAllCustomer())
 
 let bank1=admin.createBank("Bank Of India")
 let bank2=admin.createBank("Indian Overseas Bank")
-console.log(admin.getAllBanks())
+// console.log(admin.getAllBanks())
 
 // admin.updateBank(0,"bankName","Canara Bank")
 // console.log(bank1)
@@ -42,7 +42,7 @@ customer1.withdraw(1,500)
 // console.log(customer1.getTransaction())
 
 customer1.transfer(1,2,3,1000)
-// console.log(customer1.getTransaction())
+console.log(customer1.getTransaction())
 
 console.log(customer1.getPassbook(1))
 console.log(customer2.getPassbook(3))
